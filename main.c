@@ -9,9 +9,8 @@
 #endif
 
 const char temperatura[] PROGMEM = "Temp:  "; //mensagem armazenada na memória flash
-const char umidade[] PROGMEM = "Umid:  "; //mensagem armazenada na memória flash
+const char umidade[] PROGMEM = "Umid:  ";     //mensagem armazenada na memória flash
 
-//-----------------------------------------------------------------------------------
 /*
 SENSOR DE TEMP/UMID:
 PD3
@@ -79,8 +78,7 @@ char* integer2string(int x){
     return buffer;
 }
 
-int main()
-{
+int main(){
     uint8_t sensor = PD3;
     uint8_t vec[] = {0, 0, 0, 0, 0}; // Vetor para que o sensor escreva os valores
     char *temp;
@@ -88,9 +86,9 @@ int main()
     uint8_t i,j; 
 
     uartInit();
-    _delay_ms(2000); // Da 2s de Delay pra sensor inicializar
-    DDRD = 0xFF; //PORTD como saída
-    DDRB = 0xFF; //PORTB como saída
+    _delay_ms(2000);  // Da 2s de Delay pra sensor inicializar
+    DDRD = 0xFF;      //PORTD como saída
+    DDRB = 0xFF;      //PORTB como saída
     inic_LCD_4bits(); //inicializa o LCD
 
     while(1){
@@ -102,10 +100,10 @@ int main()
             umid = integer2string(vec[0]);
 
             // ------------------------------------------- Escrita da Temperatura
-            cmd_LCD(0x01,0); // Limpa o display
-            cmd_LCD(0x80,0); // Coloca o cursor na primeira linha
+            cmd_LCD(0x01,0);                // Limpa o display
+            cmd_LCD(0x80,0);                // Coloca o cursor na primeira linha
             escreve_LCD_Flash(temperatura); // Escreve "Temp:"
-            escreve_LCD(temp); // Escreve a temperatura lida pelo sensor
+            escreve_LCD(temp);              // Escreve a temperatura lida pelo sensor
             
             // Escreve "ºC"
             escreve_LCD(" ");
@@ -113,9 +111,9 @@ int main()
             escreve_LCD("C");
             
             // ------------------------------------------- Escrita da Umidade
-            cmd_LCD(0xC0,0); // Coloca o cursor na segunda linha
+            cmd_LCD(0xC0,0);            // Coloca o cursor na segunda linha
             escreve_LCD_Flash(umidade); // Escreve "Umid:"
-            escreve_LCD(umid); // Escreve a umidade lida pelo sensor
+            escreve_LCD(umid);          // Escreve a umidade lida pelo sensor
             escreve_LCD(" %");
 
             // Move a mensagem pra direita
@@ -137,4 +135,3 @@ int main()
         }
     }
 }
-//================================================================================ //
