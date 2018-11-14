@@ -4,7 +4,7 @@
 // A via de dados do LCD deve ser ligado aos 4 bits mais significativos ou //
 // aos 4 bits menos significativos do PORT do uC //
 //================================================================================ //
-#include "./LCD.h"
+#include "LCD.h"
 
 //-----------------------------------------------------------------------------------
 // Sub-rotina para enviar caracteres e comandos ao LCD com via de dados de 4 bits

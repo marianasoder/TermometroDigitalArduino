@@ -1,6 +1,6 @@
 #ifndef _LCD_H
 #define _LCD_H
-#include "../others/def_principais.h"
+#include "def_principais.h"
 #define DADOS_LCD PORTD //4 bits de dados do LCD no PORTD
 #define nibble_dados 1 /*0 para via de dados do LCD nos 4 LSBs do PORT
  empregado (Px0-D4, Px1-D5, Px2-D6, Px3-D7), 1 para via de

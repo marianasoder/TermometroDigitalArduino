@@ -1,7 +1,6 @@
-#include "./others/def_principais.h" //inclusão do arquivo com as principais definições
-#include "./LCD/LCD.h"
-#include "./medTemp/medTemp.h"
-#include "./others/uart.h"
+#include "def_principais.h" //inclusão do arquivo com as principais definições
+#include "LCD.h"
+#include "uart.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -9,8 +8,8 @@
 #define F_CPU 16000000UL //define a frequência do microcontrolador - 16MHz
 #endif
 
-const char temperatura[] PROGMEM = "Temper.: "; //mensagem armazenada na memória flash
-const char umidade[] PROGMEM = "Umidade: "; //mensagem armazenada na memória flash
+const char temperatura[] PROGMEM = "Temp:  "; //mensagem armazenada na memória flash
+const char umidade[] PROGMEM = "Umid:  "; //mensagem armazenada na memória flash
 
 const uint8_t posicDisplay[2][16] PROGMEM = {
     {0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F},
@@ -34,6 +33,45 @@ uint8_t getPos(uint8_t linha, uint8_t coluna){
     return pgm_read_byte(&posicDisplay[linha][coluna]);
 }
 
+uint8_t getTempAndUmid(uint8_t* vec, uint8_t sensor){
+    uint8_t i, j, cont;
+    vec[0] = 0b00000000; // Parte inteira do RH
+    vec[1] = 0b00000000; // Parte decimal do RH
+    vec[2] = 0b00000000; // Parte inteira de T
+    vec[3] = 0b00000000; // Parte decimal de T
+    vec[4] = 0b00000000; // checksum
+
+    set_bit(DDRD, sensor);  // Ativa o sensor como saida
+    set_bit(PORTD, sensor); // deixa o nivel alto
+
+    clr_bit(PORTD, sensor);                 // MCU manda o sinal
+    _delay_ms(18);                          // Espera 18ms
+    
+    set_bit(PORTD, sensor);                 //ativa o Pull Up
+    clr_bit(DDRD, sensor);
+
+    while(tst_bit(PIND, sensor));           // Enquanto aguarda a resposta do DHT por 20-40us
+    while(!tst_bit(PIND, sensor));          // DHT envia sinal de resposta por +- 80us 
+    while(tst_bit(PIND, sensor));           // DHT ativa o Pull Up por +- 80us 
+
+    for(i=0; i<5;i++){
+        for(j=8; j>=1; j--){
+            cont = 0;                       // Zera o contador
+            while(!tst_bit(PIND, sensor));  // Espera ficar em nivel alto
+            while(tst_bit(PIND, sensor)){   // quando ficar alto
+                //_delay_us(1);             // conta o tempo que ficou alto
+                cont++;
+            }
+
+            if(cont > 65){                  // Setar em 1
+                set_bit(vec[i], j-1);
+            }                               // caso contrario eh zero (como ja esta setado)
+        }
+    }
+
+    return ((vec[0]+vec[1]+vec[2]+vec[3]) == vec[4]);
+}
+
 char* integer_to_string(int x){
     char* buffer = malloc(sizeof(char) * sizeof(int) * 4 + 1);
     if (buffer)
@@ -45,24 +83,54 @@ char* integer_to_string(int x){
 
 int main()
 {
-    //uint8_t sensor = PD3;
-    //uint8_t vec[] = {0, 0, 0, 0, 0};
+    uint8_t sensor = PD3;
+    uint8_t vec[] = {0, 0, 0, 0, 0};
     char *temp;
     char *umid;
-    char *aux;
+    uint8_t i,j; 
 
     uartInit();
-    //startTempAndUmidSen();
-    inic_LCD_4bits(); //inicializa o LCD
+    _delay_ms(2000);
     DDRD = 0xFF; //PORTD como saída
     DDRB = 0xFF; //PORTB como saída
- 
-    escreve_LCD_Flash(temperatura);
-    cmd_LCD(0xC0,0); // move o cursor pra segunda linha
-    escreve_LCD_Flash(umidade);
+    inic_LCD_4bits(); //inicializa o LCD
 
     while(1){
+        if (getTempAndUmid(vec, sensor)){
+            printf("Umidade: %d.%d / Temperatura: %d.%d C \n", vec[0], vec[1], vec[2], vec[3]);
+
+        }
+
+        temp = integer_to_string(vec[2]);
+        umid = integer_to_string(vec[0]);
+
+        cmd_LCD(0x01,0); //limpa todo o display
+        cmd_LCD(0x80,0); //inicializa cursor na primeira posição a esquerda - 1a linha
+        escreve_LCD_Flash(temperatura);
+        escreve_LCD(temp); //string armazenada na RAM
         
+        escreve_LCD(" ");
+        cmd_LCD(0xDF,1);
+        escreve_LCD("C");
+        
+        cmd_LCD(0xC0,0);
+        escreve_LCD_Flash(umidade);
+        escreve_LCD(umid);
+        escreve_LCD(" %");
+
+        for(i=0; i<4; i++){
+            cmd_LCD(0x1C, 0);
+            _delay_ms(500);
+        }
+
+        for(i=0; i<4; i++){
+            cmd_LCD(0x18, 0);
+            _delay_ms(500);
+        }
+
+        _delay_ms(500);
+        free(temp);
+        free(umid);
     }
 }
 //================================================================================ //

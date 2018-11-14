@@ -5,7 +5,7 @@ CCOBJ = avr-objcopy
 PROG = main
 EXTEN = c
 
-DEP = -C ./others/uart.c ./medTemp/medTemp.c ./LCD/LCD.c 
+DEP = -C ./uart.c  ./LCD.c 
 
 # Porta de comunicação com o Arduino
 PORT = /dev/ttyACM0
