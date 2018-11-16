@@ -12,6 +12,8 @@
 #define resetCurs() cmd_LCD(0x80,0)
 #define moveCurSecLine() cmd_LCD(0xC0,0)
 #define writeGrausSym() cmd_LCD(0xDF,1)
+#define moveMesRight() cmd_LCD(0x1C, 0)
+#define moveMesLeft() cmd_LCD(0x18, 0)
 
 const char temperatura[] PROGMEM = "Temp:  "; //mensagem armazenada na memória flash
 const char umidade[] PROGMEM = "Umid:  ";     //mensagem armazenada na memória flash
@@ -123,13 +125,13 @@ int main(){
 
             // Move a mensagem pra direita
             for(i=0; i<4; i++){
-                cmd_LCD(0x1C, 0);
+                moveMesRight(); //cmd_LCD(0x1C, 0);
                 _delay_ms(500);
             }
 
             // Move a mensagem pra esquerda
             for(i=0; i<4; i++){
-                cmd_LCD(0x18, 0);
+                moveMesLeft(); //cmd_LCD(0x18, 0);
                 _delay_ms(500);
             }
 
