@@ -8,6 +8,11 @@
 #define F_CPU 16000000UL //define a frequência do microcontrolador - 16MHz
 #endif
 
+#define cleanDisplay() cmd_LCD(0x01,0)
+#define resetCurs() cmd_LCD(0x80,0)
+#define moveCurSecLine() cmd_LCD(0xC0,0)
+#define writeGrausSym() cmd_LCD(0xDF,1)
+
 const char temperatura[] PROGMEM = "Temp:  "; //mensagem armazenada na memória flash
 const char umidade[] PROGMEM = "Umid:  ";     //mensagem armazenada na memória flash
 
@@ -85,12 +90,12 @@ int main(){
     char *umid;
     uint8_t i,j; 
 
-    uartInit();
-    _delay_ms(2000);  // Da 2s de Delay pra sensor inicializar
     DDRD = 0xFF;      //PORTD como saída
     DDRB = 0xFF;      //PORTB como saída
-    inic_LCD_4bits(); //inicializa o LCD
 
+    uartInit();
+    inic_LCD_4bits(); //inicializa o LCD (20ms delay)
+    
     while(1){
         if (getTempAndUmid(vec, sensor)){
             printf("Umidade: %d.%d / Temperatura: %d.%d C \n", vec[0], vec[1], vec[2], vec[3]);
@@ -100,18 +105,18 @@ int main(){
             umid = integer2string(vec[0]);
 
             // ------------------------------------------- Escrita da Temperatura
-            cmd_LCD(0x01,0);                // Limpa o display
-            cmd_LCD(0x80,0);                // Coloca o cursor na primeira linha
+            cleanDisplay();                 //cmd_LCD(0x01,0); -> Limpa o display
+            resetCurs();                    //cmd_LCD(0x80,0); -> Coloca o cursor na primeira linha
             escreve_LCD_Flash(temperatura); // Escreve "Temp:"
             escreve_LCD(temp);              // Escreve a temperatura lida pelo sensor
             
             // Escreve "ºC"
             escreve_LCD(" ");
-            cmd_LCD(0xDF,1);
+            writeGrausSym(); //cmd_LCD(0xDF,1); -> Dezenha o "º"
             escreve_LCD("C");
             
             // ------------------------------------------- Escrita da Umidade
-            cmd_LCD(0xC0,0);            // Coloca o cursor na segunda linha
+            moveCurSecLine();           //cmd_LCD(0xC0,0); -> Coloca o cursor na segunda linha
             escreve_LCD_Flash(umidade); // Escreve "Umid:"
             escreve_LCD(umid);          // Escreve a umidade lida pelo sensor
             escreve_LCD(" %");
